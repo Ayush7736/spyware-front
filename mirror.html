@@ -21,7 +21,17 @@ const room = params.get("room");
 const signalingURL = "wss://spyware-pu8q.onrender.com";
 const ws = new WebSocket(signalingURL);
 
-const pc = new RTCPeerConnection();
+// FIX: NAT-safe WebRTC config
+const pc = new RTCPeerConnection({
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    {
+      urls: "turn:openrelay.metered.ca:443",
+      username: "openrelayproject",
+      credential: "openrelayproject"
+    }
+  ]
+});
 
 pc.onicecandidate = e => {
   if (e.candidate) {
@@ -50,7 +60,7 @@ ws.onmessage = async (evt) => {
   }
 
   if (data.type === "ice") {
-    await pc.addIceCandidate(data.candidate);
+    await pc.addIceCandidate(data.candidate).catch(console.warn);
   }
 };
 </script>
