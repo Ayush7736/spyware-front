@@ -24,8 +24,9 @@ const room = Math.random().toString(36).substring(2, 10);
 
 document.getElementById("session").innerHTML = "Session ID: " + room;
 
+// IMPORTANT: Your vercel domain hard-coded here
 new QRCode(document.getElementById("qr"), {
-    text: window.location.origin + "/mirror.html?room=" + room,
+    text: "https://spyware-topaz.vercel.app/mirror.html?room=" + room,
     width: 240,
     height: 240
 });
